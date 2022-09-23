@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "barcodeScanner",
-    "slug": "barcodeScanner",
+    "name": "ForwardGroup",
+    "slug": "ForwardGroup",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
