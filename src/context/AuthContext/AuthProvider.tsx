@@ -33,33 +33,73 @@ const reducer = (state, action) => {
 export default function AuthProvider({ children }) {
     const [state, dispatch] = React.useReducer(reducer, defaultState);
 
-    const login = async (user) => {
+    const login = async (user: { email: string; password: string }) => {
+        dispatch({ type: SETLOADING, payload: true });
         try {
             const data = {
-                email: user.email,
+                email: user.email.toLowerCase(),
                 password: user.password,
             };
             const baseURL = Constants.manifest.extra.baseUrl;
-            const response = await axios.post(`${baseURL}/auth/login`, data);
-            dispatch({ type: LOGIN, payload: response?.data?.user });
-            AsyncStorage.setItem(
-                "auth",
-                JSON.stringify({
-                    user: response?.data?.user,
-                    token: response?.data?.token,
-                })
-            );
+            const response = await axios.post(`${baseURL}/login`, data);
+
+            if (response.data.success) {
+                dispatch({ type: LOGIN, payload: response?.data?.user });
+                await AsyncStorage.setItem("auth", JSON.stringify(data));
+            } else {
+                dispatch({
+                    type: SETERROR,
+                    payload: {
+                        type: "login",
+                        message: "Invalid email or password",
+                    },
+                });
+            }
+            dispatch({ type: SETLOADING, payload: false });
         } catch (error) {
             dispatch({
                 type: SETERROR,
-                payload: error?.response?.data?.message,
+                payload: {
+                    type: "login",
+                    message: error.message,
+                },
             });
+            dispatch({ type: SETLOADING, payload: false });
         }
     };
 
     const logout = () => {
         dispatch({ type: LOGOUT });
         AsyncStorage.removeItem("auth");
+    };
+
+    const checkAuthentication = async () => {
+        dispatch({ type: SETLOADING, payload: true });
+        const auth = await AsyncStorage.getItem("auth");
+        if (auth) {
+            const { user } = JSON.parse(auth);
+            dispatch({ type: LOGIN, payload: user });
+        }
+        dispatch({ type: SETLOADING, payload: false });
+    };
+
+    const scan = async (code) => {
+        try {
+            const baseURL = Constants.manifest.extra.baseUrl;
+            const response = await axios.post(`${baseURL}/scan`, {
+                code,
+            });
+
+            return response.data;
+        } catch (error) {
+            dispatch({
+                type: SETERROR,
+                payload: {
+                    type: "scan",
+                    message: error.message,
+                },
+            });
+        }
     };
 
     const values = {
@@ -71,6 +111,7 @@ export default function AuthProvider({ children }) {
         logout,
         setLoading: (value) => dispatch({ type: SETLOADING, payload: value }),
         setError: (value) => dispatch({ type: SETERROR, payload: value }),
+        checkAuthentication,
     };
 
     return (

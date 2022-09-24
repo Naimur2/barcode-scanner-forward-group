@@ -12,6 +12,9 @@ import {
 import AuthContext from "../../context/AuthContext/AuthContext";
 import * as Yup from "yup";
 import logo from "../../../assets/icon.png";
+import fonts from "../../theme/fonts";
+import { ActivityIndicator } from "react-native";
+import AwesomeAlert from "react-native-awesome-alerts";
 
 export default function Login() {
     const [isChecked, setChecked] = React.useState(false);
@@ -38,6 +41,13 @@ export default function Login() {
 
     return (
         <View style={[styles.container]}>
+            {authCtx?.isLoading ? (
+                <ActivityIndicator
+                    style={[styles.activity]}
+                    size="large"
+                    color="#000000"
+                />
+            ) : null}
             <Image source={logo} style={styles.logo} />
             <Text style={styles.loginHeader}>Login</Text>
             <View style={styles.loginForm}>
@@ -49,6 +59,7 @@ export default function Login() {
                         onChangeText={handleChange("email")}
                         onBlur={handleBlur("email")}
                         value={values.email}
+                        keyboardType="email-address"
                     />
                     {touched?.email && errors.email ? (
                         <Text style={styles.errorMessage}>{errors.email}</Text>
@@ -87,6 +98,20 @@ export default function Login() {
                     <Text style={styles.buttonText}>Login</Text>
                 </Pressable>
             </View>
+            <AwesomeAlert
+                show={authCtx?.error ? true : false}
+                showProgress={false}
+                title="Error"
+                message={authCtx?.error?.message}
+                closeOnTouchOutside={true}
+                closeOnHardwareBackPress={true}
+                showConfirmButton={true}
+                confirmText="Ok"
+                confirmButtonColor="#DD6B55"
+                onConfirmPressed={() => {
+                    authCtx.setError(null);
+                }}
+            />
         </View>
     );
 }
@@ -96,6 +121,14 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+        position: "relative",
+    },
+    activity: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     loginHeader: {
         fontSize: 30,
@@ -111,14 +144,15 @@ const styles = StyleSheet.create({
         height: 40,
         borderColor: "gray",
         borderWidth: 1,
-
+        fontFamily: fonts.inter[400],
         paddingHorizontal: 10,
         borderRadius: 5,
     },
     loginFormLabel: {
         fontSize: 16,
-        fontWeight: "500",
+        // fontWeight: "500",
         marginBottom: 10,
+        fontFamily: fonts.inter[500],
     },
     inputGroup: {
         marginBottom: 20,
@@ -134,6 +168,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         textTransform: "uppercase",
         fontWeight: "bold",
+        fontFamily: fonts.inter[700],
     },
     checkbox: {
         marginRight: 10,
@@ -146,9 +181,13 @@ const styles = StyleSheet.create({
         color: "red",
         fontSize: 12,
         marginTop: 5,
+        fontFamily: fonts.inter[300],
     },
     logo: {
         width: 250,
         height: 150,
+    },
+    checkboxText: {
+        fontFamily: fonts.inter[300],
     },
 });

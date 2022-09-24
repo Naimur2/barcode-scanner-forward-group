@@ -14,6 +14,7 @@ export interface IAuthContext {
     isAuthenticated: boolean;
     setLoading: (isLoading: boolean) => void;
     setError: (error: IError) => void;
+    checkAuthentication: () => void;
 }
 
 const AuthContext = React.createContext<IAuthContext>({
@@ -25,6 +26,7 @@ const AuthContext = React.createContext<IAuthContext>({
     isLoading: false,
     setLoading: (isLoading: boolean) => {},
     setError: (error: IError) => {},
+    checkAuthentication: () => {},
 });
 
 export default AuthContext;
