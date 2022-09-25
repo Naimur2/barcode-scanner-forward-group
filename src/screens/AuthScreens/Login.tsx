@@ -129,6 +129,7 @@ const styles = StyleSheet.create({
         fontSize: 30,
         fontWeight: "bold",
         marginBottom: 20,
+        fontFamily: fonts.inter[400],
     },
     loginForm: {
         width: "100%",
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         textTransform: "uppercase",
         fontWeight: "bold",
-        fontFamily: fonts.inter[700],
+        fontFamily: fonts.inter[600],
     },
     checkbox: {
         marginRight: 10,

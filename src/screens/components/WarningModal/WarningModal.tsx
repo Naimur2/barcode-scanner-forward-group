@@ -1,15 +1,19 @@
+import { Audio } from "expo-av";
 import LottieView from "lottie-react-native";
 import React from "react";
 import Modal from "react-native-modal";
 import { scale } from "react-native-size-matters";
 import styled from "styled-components/native";
 import { IAlert } from "../../BarcodeScreen";
-import { Audio } from "expo-av";
+
+const errorSound = require("../../../../assets/sounds/error-alarm.wav");
+const successSound = require("../../../../assets/sounds/success-alarm.mp3");
 
 interface IWarningModal extends IAlert {
     isVisible: boolean;
     onClose: () => void;
-    playSoundOnError: boolean;
+
+    withSound: boolean;
 }
 
 export default function WarningModal({
@@ -18,44 +22,50 @@ export default function WarningModal({
     message,
     isVisible,
     onClose,
-    playSoundOnError,
+    withSound,
 }: IWarningModal) {
     const error = React.useRef(null);
     const success = React.useRef(null);
     const [sound, setSound] = React.useState(null);
 
-    async function playSound() {
-        console.log("Loading Sound");
+    async function playSound(soundType: "success" | "error") {
+        // console.log("Loading Sound");
         const { sound } = await Audio.Sound.createAsync(
-            require("../../../../assets/sounds/error-alarm.wav")
+            soundType === "error" ? errorSound : successSound
         );
-        sound.setIsLoopingAsync(true);
+        if (soundType === "error") {
+            sound.setIsLoopingAsync(true);
+        }
         setSound(sound);
 
-        console.log("Playing Sound");
+        // console.log("Playing Sound");
         await sound.playAsync();
     }
 
     React.useEffect(() => {
         return sound
             ? () => {
-                  console.log("Unloading Sound");
+                  //   console.log("Unloading Sound");
                   sound.unloadAsync();
               }
             : undefined;
     }, [sound]);
 
     React.useEffect(() => {
-        if (type === "error" && playSoundOnError && isVisible) {
-            playSound();
+        if (withSound && isVisible) {
+            if (type === "error") {
+                playSound("error");
+            } else if (type === "success") {
+                playSound("success");
+            }
         }
         if (!isVisible) {
             sound?.stopAsync();
         }
-    }, [type, playSoundOnError, isVisible]);
+    }, [isVisible]);
 
     return (
-        <Modal isVisible={isVisible}>
+        <Modal isVisible={isVisible} onBackdropPress={onClose}>
             <ModalContainer>
                 <ModalTitle color={type === "success" ? "green" : "red"}>
                     {message}

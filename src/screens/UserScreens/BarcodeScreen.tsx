@@ -1,21 +1,14 @@
 import axios from "axios";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Constants from "expo-constants";
+import LottieView from "lottie-react-native";
 import React, { useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    Image,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { scale } from "react-native-size-matters";
 import logo from "../../../assets/logo.png";
 import AuthContext from "../../context/AuthContext/AuthContext";
 import fonts from "../../theme/fonts";
 import WarningModal from "../components/WarningModal/WarningModal";
-import LottieView from "lottie-react-native";
-import { scale } from "react-native-size-matters";
 export interface IAlert {
     type: "success" | "error";
     title: string;
@@ -43,13 +36,13 @@ export default function BarcodeScreen() {
     }, []);
 
     const handleBarCodeScanned = async ({ type, data }) => {
-        // setScanned(true);
+        setScanned(true);
 
         const urlRegx = new RegExp(
             /https:\/\/eventregs\.forwardgroup\.qa\/scan\/\d+/gm
         );
-        if (urlRegx.test(data)) {
-            setLoading(true);
+
+        if (data && urlRegx.test(data)) {
             const eventId = data.split("/").pop();
             const baseURL = Constants.manifest.extra.baseUrl;
 
@@ -57,13 +50,14 @@ export default function BarcodeScreen() {
                 const response = await axios.get(
                     `${baseURL}/scan-qr/${eventId}`
                 );
-                setLoading(false);
+
                 if (response.data.success) {
                     setAlertState({
                         type: "success",
                         title: "Success",
                         message: "Access granted",
                     });
+                    setError(null);
                 } else {
                     setAlertState({
                         type: "error",
@@ -72,11 +66,10 @@ export default function BarcodeScreen() {
                     });
                 }
 
-                setError("");
-                setScanned(true);
+                setError(null);
             } catch (error) {
                 setError("Error fetching data");
-                setLoading(false);
+                console.log(error);
             }
         } else {
             setAlertState({
@@ -84,6 +77,8 @@ export default function BarcodeScreen() {
                 title: "Error",
                 message: "Access expired",
             });
+
+            setError(null);
         }
     };
 
@@ -119,13 +114,6 @@ export default function BarcodeScreen() {
 
     return (
         <View style={styles.container}>
-            {loading ? (
-                <ActivityIndicator
-                    style={[styles.activity]}
-                    size="large"
-                    color="#000000"
-                />
-            ) : null}
             <Image source={logo} style={styles.logo} />
             <Text style={styles.suggestions}>
                 Put the code inside the camera
@@ -135,7 +123,10 @@ export default function BarcodeScreen() {
                     onBarCodeScanned={
                         scanned ? undefined : handleBarCodeScanned
                     }
-                    style={StyleSheet.absoluteFillObject}
+                    style={[
+                        StyleSheet.absoluteFillObject,
+                        styles.scannerCamera,
+                    ]}
                 />
             </View>
             {scanned && (
@@ -159,10 +150,9 @@ export default function BarcodeScreen() {
                 message={alertState?.message}
                 type={alertState?.type}
                 isVisible={!!alertState}
-                playSoundOnError={true}
+                withSound={true}
                 onClose={() => {
                     setAlertState(null);
-                    setScanned(true);
                 }}
             />
         </View>
@@ -181,6 +171,8 @@ const styles = StyleSheet.create({
         height: 300,
         width: 300,
         marginBottom: 30,
+        position: "relative",
+        zIndex: 1,
     },
     suggestions: {
         textAlign: "center",
@@ -229,11 +221,13 @@ const styles = StyleSheet.create({
         fontFamily: fonts.inter[400],
         marginTop: 20,
     },
-    activity: {
+
+    scannerCamera: {},
+    loaderContainer: {
+        backgroundColor: "#fff",
+        alignItems: "center",
+        justifyContent: "center",
         position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: "50%",
     },
 });
