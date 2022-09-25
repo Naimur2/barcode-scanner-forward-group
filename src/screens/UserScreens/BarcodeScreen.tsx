@@ -1,27 +1,42 @@
+import axios from "axios";
 import { BarCodeScanner } from "expo-barcode-scanner";
+import Constants from "expo-constants";
 import React, { useEffect, useState } from "react";
-import { Button, Image, Pressable, StyleSheet, Text, View } from "react-native";
-import logo from "../../../assets/icon.png";
+import {
+    ActivityIndicator,
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+import logo from "../../../assets/logo.png";
 import AuthContext from "../../context/AuthContext/AuthContext";
 import fonts from "../../theme/fonts";
-import Constants from "expo-constants";
-import axios from "axios";
-import AwesomeAlert from "react-native-awesome-alerts";
+import WarningModal from "../components/WarningModal/WarningModal";
+import LottieView from "lottie-react-native";
+import { scale } from "react-native-size-matters";
+export interface IAlert {
+    type: "success" | "error";
+    title: string;
+    message: string;
+}
 
 export default function BarcodeScreen() {
     const [hasPermission, setHasPermission] = useState(null);
     const [scanned, setScanned] = useState(false);
     const authCtx = React.useContext(AuthContext);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState("");
-    const [alertTitle, setAlertTitle] = useState("");
-    const [error, setError] = useState("");
+    const [alertState, setAlertState] = useState<IAlert | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
+    const loadingAnimation = React.useRef(null);
 
     useEffect(() => {
         const getBarCodeScannerPermissions = async () => {
+            setLoading(true);
             const { status } = await BarCodeScanner.requestPermissionsAsync();
             setHasPermission(status === "granted");
+            setLoading(false);
         };
 
         getBarCodeScannerPermissions();
@@ -44,44 +59,56 @@ export default function BarcodeScreen() {
                 );
                 setLoading(false);
                 if (response.data.success) {
-                    setShowAlert(true);
-                    setAlertMessage(
-                        "You have successfully scanned the QR code"
-                    );
-                    setAlertTitle("Success");
+                    setAlertState({
+                        type: "success",
+                        title: "Success",
+                        message: "Access granted",
+                    });
                 } else {
-                    setShowAlert(true);
-                    setAlertMessage("Invalid User");
-                    setAlertTitle("Error");
+                    setAlertState({
+                        type: "error",
+                        title: "Error",
+                        message: "Access declined",
+                    });
                 }
 
                 setError("");
                 setScanned(true);
             } catch (error) {
                 setError("Error fetching data");
+                setLoading(false);
             }
+        } else {
+            setAlertState({
+                type: "error",
+                title: "Error",
+                message: "Access expired",
+            });
         }
     };
 
-    if (hasPermission === null) {
+    if (loading) {
         return (
             <View style={styles.container}>
-                <Text
+                <LottieView
+                    autoPlay
+                    ref={loadingAnimation}
                     style={{
-                        fontFamily: fonts.inter[400],
+                        width: scale(100),
+                        height: scale(100),
                     }}
-                >
-                    Requesting for camera permission
-                </Text>
+                    source={require("../../../assets/animations/loading.json")}
+                />
             </View>
         );
     }
-    if (hasPermission === false) {
+    if (!hasPermission) {
         return (
             <View style={styles.container}>
                 <Text
                     style={{
-                        fontFamily: fonts.inter[400],
+                        fontFamily: fonts.inter[700],
+                        fontSize: 20,
                     }}
                 >
                     No access to camera
@@ -92,6 +119,13 @@ export default function BarcodeScreen() {
 
     return (
         <View style={styles.container}>
+            {loading ? (
+                <ActivityIndicator
+                    style={[styles.activity]}
+                    size="large"
+                    color="#000000"
+                />
+            ) : null}
             <Image source={logo} style={styles.logo} />
             <Text style={styles.suggestions}>
                 Put the code inside the camera
@@ -120,34 +154,15 @@ export default function BarcodeScreen() {
                     <Text style={styles.buttonText}>Sign Out</Text>
                 </Pressable>
             </View>
-            <AwesomeAlert
-                show={showAlert}
-                showProgress={false}
-                title={alertTitle}
-                message={alertMessage}
-                closeOnTouchOutside={false}
-                closeOnHardwareBackPress={false}
-                showConfirmButton={true}
-                confirmText="OK"
-                confirmButtonColor="#DD6B55"
-                onConfirmPressed={() => {
-                    setShowAlert(false);
-                    setAlertMessage("");
-                    // setScanned(false);
-                }}
-                onDismiss={() => {
-                    setShowAlert(false);
-                    setAlertMessage("");
-                }}
-                confirmButtonStyle={{
-                    fontFamily: fonts.inter[400],
-                    paddingHorizontal: 20,
-                    paddingVertical: 10,
-                }}
-                messageStyle={{
-                    fontFamily: fonts.inter[400],
-                    fontSize: 16,
-                    textAlign: "center",
+            <WarningModal
+                title={alertState?.title}
+                message={alertState?.message}
+                type={alertState?.type}
+                isVisible={!!alertState}
+                playSoundOnError={true}
+                onClose={() => {
+                    setAlertState(null);
+                    setScanned(true);
                 }}
             />
         </View>
@@ -160,6 +175,7 @@ const styles = StyleSheet.create({
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        position: "relative",
     },
     scanner: {
         height: 300,
@@ -212,5 +228,12 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontFamily: fonts.inter[400],
         marginTop: 20,
+    },
+    activity: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
 });

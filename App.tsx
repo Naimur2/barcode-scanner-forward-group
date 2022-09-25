@@ -2,7 +2,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import React from "react";
 import AuthProvider from "./src/context/AuthContext/AuthProvider";
 import Home from "./src/screens/Home";
-import * as SplashScreen from "expo-splash-screen";
 import {
     useFonts,
     Inter_100Thin,

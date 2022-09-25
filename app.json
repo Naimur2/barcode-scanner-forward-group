@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ForwardGroup",
-    "slug": "ForwardGroup",
+    "name": "Forward Group Scanner",
+    "slug": "ForwardGroupScanner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,7 +18,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.forwardgroup.scanner",
+      "buildNumber": "1.0.2",
     },
     "android": {
       "adaptiveIcon": {

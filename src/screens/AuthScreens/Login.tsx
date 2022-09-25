@@ -2,19 +2,19 @@ import Checkbox from "expo-checkbox";
 import { useFormik } from "formik";
 import React from "react";
 import {
+    ActivityIndicator,
+    Image,
     Pressable,
     StyleSheet,
     Text,
     TextInput,
     View,
-    Image,
 } from "react-native";
-import AuthContext from "../../context/AuthContext/AuthContext";
 import * as Yup from "yup";
-import logo from "../../../assets/icon.png";
+import logo from "../../../assets/logo.png";
+import AuthContext from "../../context/AuthContext/AuthContext";
 import fonts from "../../theme/fonts";
-import { ActivityIndicator } from "react-native";
-import AwesomeAlert from "react-native-awesome-alerts";
+import WarningModal from "../components/WarningModal/WarningModal";
 
 export default function Login() {
     const [isChecked, setChecked] = React.useState(false);
@@ -98,17 +98,12 @@ export default function Login() {
                     <Text style={styles.buttonText}>Login</Text>
                 </Pressable>
             </View>
-            <AwesomeAlert
-                show={authCtx?.error ? true : false}
-                showProgress={false}
+            <WarningModal
+                isVisible={authCtx?.error ? true : false}
                 title="Error"
                 message={authCtx?.error?.message}
-                closeOnTouchOutside={true}
-                closeOnHardwareBackPress={true}
-                showConfirmButton={true}
-                confirmText="Ok"
-                confirmButtonColor="#DD6B55"
-                onConfirmPressed={() => {
+                type="error"
+                onClose={() => {
                     authCtx.setError(null);
                 }}
             />
